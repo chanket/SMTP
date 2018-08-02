@@ -87,12 +87,13 @@ namespace Licc.Smtp
         /// <exception cref="Exception">其它异常</exception>
         public async Task SendAsync(string username, string password, string to, string subject, string content)
         {
-            await SendAsync(username, password, new string[] { to }, subject, content, false, null).ConfigureAwait(false);
+            await SendAsync(username, username, password, new string[] { to }, subject, content, false, null).ConfigureAwait(false);
         }
 
         /// <summary>
         /// 发送邮件。这个重载具备最完整的功能，可以指定多个收件人、附件等。
         /// </summary>
+        /// <param name="friendlyName">发件人名称</param>
         /// <param name="username">发件人邮箱/用户名</param>
         /// <param name="password">发件人密码</param>
         /// <param name="to">收件人邮箱列表</param>
@@ -103,13 +104,13 @@ namespace Licc.Smtp
         /// <exception cref="SmtpClientAuthException">用户名/密码错误</exception>
         /// <exception cref="SmtpClientException">交互异常</exception>
         /// <exception cref="Exception">其它异常</exception>
-        public async Task SendAsync(string username, string password, IEnumerable<string> to, string subject, string content, bool isContentHTML, IEnumerable<SmtpClientAttach> files)
+        public async Task SendAsync(string friendlyName, string username, string password, IEnumerable<string> to, string subject, string content, bool isContentHTML, IEnumerable<SmtpClientAttach> files)
         {
             using (var stream = await ConnectAsync(this.Host, this.Port, this.Ssl).ConfigureAwait(false))
             {
                 await HandshakeAsync(stream).ConfigureAwait(false);
                 await LoginAsync(stream, username, password).ConfigureAwait(false);
-                await SendAsync(stream, username, to, subject, content, isContentHTML, files).ConfigureAwait(false);
+                await SendAsync(stream, friendlyName, username, to, subject, content, isContentHTML, files).ConfigureAwait(false);
             }
         }
         #endregion
@@ -319,8 +320,9 @@ namespace Licc.Smtp
         /// （在登陆后）发送邮件。
         /// </summary>
         /// <param name="stream">套接字IO流</param>
-        /// <param name="from">发件人</param>
-        /// <param name="to">收件人列表</param>
+        /// <param name="name">发件人名称</param>
+        /// <param name="from">发件人邮箱</param>
+        /// <param name="to">收件人邮箱列表</param>
         /// <param name="subject">标题</param>
         /// <param name="content">正文</param>
         /// <param name="isContentHTML">正文是否为HTML</param>
@@ -328,7 +330,7 @@ namespace Licc.Smtp
         /// <exception cref="SmtpClientException">交互异常</exception>
         /// <exception cref="Exception">其它异常</exception>
         /// <returns></returns>
-        private async Task SendAsync(Stream stream, string from, IEnumerable<string> to, string subject, string content, bool isContentHTML, IEnumerable<SmtpClientAttach> files)
+        private async Task SendAsync(Stream stream, string name, string from, IEnumerable<string> to, string subject, string content, bool isContentHTML, IEnumerable<SmtpClientAttach> files)
         {
             //发送
             using (var reader = new StreamReader(stream, Encoding.ASCII, false, 4096, true))
@@ -366,7 +368,7 @@ namespace Licc.Smtp
                 //MIME报文
                 string boundary = "=====Licc_NextPart" + DateTime.Now.Ticks + "=====";
                 string send = "";
-                send += "From: <" + from + ">" + Environment.NewLine;
+                send += "From: \"" + Base64ExtendedWordEncode(name) + "\" <" + from + ">" + Environment.NewLine;
                 send += "To: " + RcptMerge(to.ToArray()) + Environment.NewLine;
                 send += "Subject: " + Base64ExtendedWordEncode(subject) + Environment.NewLine;
                 send += "Mime-Version: 1.0" + Environment.NewLine;

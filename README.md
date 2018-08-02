@@ -2,7 +2,7 @@
 简易的异步接口的SMTP客户端。支持SSL、HTML、附件。<br />
 A simple SMTP client with async interfaces. SSL, HTML and attach files are supported. <br />
 
-# Usage
+# Example
     string server = "smtp.domain.com";
     string username = "sender@domain.com";
     string password = "senderPassword";

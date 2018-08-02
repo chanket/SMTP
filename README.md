@@ -1,6 +1,6 @@
 # SMTP
-简易的异步接口的SMTP客户端。支持SSL、HTML、附件。<br />
-A simple SMTP client with async interfaces. SSL, HTML and attach files are supported. <br />
+简易C#编写的SMTP客户端。异步接口。支持SSL、HTML、附件。<br />
+A simple SMTP client with async interfaces in C#. SSL, HTML and attach files are supported. <br />
 
 # Example
     string server = "smtp.domain.com";
